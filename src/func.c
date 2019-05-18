@@ -1,6 +1,13 @@
 //Erro na abertura arquivo
-void erroAbert(){
-    printf("Erro 101");
+void erroAbert(int e){
+    if(e == 1)
+        printf("[Erro 101]\n");
+    else if(e == 2)
+            printf("[Erro 102]\n");
+            else if(e == 3)
+                    printf("[Erro 103]\n");  
+                    else if(e == 4)
+                            printf("[Erro 104]\n");  
 }
 
 //veficia agencia
@@ -9,7 +16,7 @@ boolean verAg(int ver){
     //verif
     FILE* listaAgencia = fopen("agencias/lista-agencias.txt", "r+");
     if(listaAgencia == NULL){
-        erroAbert();
+        erroAbert(1);
         fclose(listaAgencia);
         return 0;
     }
@@ -34,7 +41,7 @@ boolean verConta(int ag, int ver){
     sprintf(caminho, "agencias/%d/lista-contas.txt", ag);
     FILE* listaConta = fopen(caminho, "r+");
     if(listaConta == NULL){
-        erroAbert();
+        erroAbert(2);
         fclose(listaConta);
         return 0;
     }
@@ -59,7 +66,7 @@ boolean verSenha(int ag, int conta, int ver){
     sprintf(caminho, "agencias/%d/%d/infos.txt", ag, conta);
     FILE* infos = fopen(caminho, "r+");
     if(infos == NULL){
-        erroAbert();
+        erroAbert(3);
         fclose(infos);
         return 0;
     }
@@ -75,8 +82,49 @@ boolean verSenha(int ag, int conta, int ver){
     return 0;
 }
 
+char* pegaNome(int ag, int conta){
+    //verif
+    char caminho[100];
+    sprintf(caminho, "agencias/%d/%d/infos.txt", ag, conta);
+    FILE* infos = fopen(caminho, "r+");
+    if(infos == NULL){
+        erroAbert(4);
+        fclose(infos);
+        return NULL;
+    }
+    char tipo = 32;
+    char* nome = malloc(50*sizeof(char));
+    char nome1[15];
+    char nome2[15];
+    char nome3[15];
+    while(!feof(infos)){
+        fscanf(infos, "%s %s %s", nome1, nome2, nome3);
+        if(nome1[0] == 35)
+            break;
+    }
+    
+    if(nome1[0] == 35){ //35 é a #
+    sprintf(nome,"%s %s %s", (nome1+1), nome2, nome3);
+        fclose(infos);
+        return nome;
+    }
+    fclose(infos);
+    return NULL;
+}
+
 void login(int ag, int conta, int senha){
+
     if(verAg(ag) && verConta(ag, conta) && verSenha(ag, conta, senha)){
-        printf("Login Efetuado\n");
+        char* nome = pegaNome(ag, conta);
+        if(nome == NULL){
+            printf("[Falha no Sistema]\n");
+            erroAbert(4);
+            return;
+        }
+        printf("[Login Efetuado]\n\n");
+        printf("Ola %s\n", nome);
+    }
+    else{
+        printf("Falha no Login: Informacoes Erradas.\n");
     }
 }

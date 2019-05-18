@@ -17,8 +17,9 @@ int main(){
         scanf("%d",&conta);
         printf("Senha: ");
         scanf("%d", &senha);
+        system("cls");
         login(ag, conta, senha);
-        // system("cls");
+        //system("cls");
     };
     return 0;
 }

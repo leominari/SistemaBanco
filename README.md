@@ -9,6 +9,7 @@
 |v0.4|`Criação das Funções Básicas`            |
 |v0.5|`Estrutura do Projeto`            |
 |v0.6|`Implementação do Login`            |
+|v0.7|`Refinamento Login|Tratamento Nome`            |
 
 
 
