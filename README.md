@@ -14,7 +14,7 @@
 |v0.9|`Melhora da interface e correção de Bugs`            |
 |**v1.0**|`Adicionado Deposito e Correção de Bugs`            |
 |v1.1|`Adicionado varias funções`            |
-
+|v1.2|`Correção do Extrato`            |
 
 
  - [X] Extrato

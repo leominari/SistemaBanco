@@ -1,5 +1,29 @@
 #include "func.h"
 
+TExt* novo(int dia, int mes, int ano, int op, double valor, double saldo){
+    TExt* no = malloc(sizeof(TExt));
+    no->dia = dia;
+    no->mes = mes;
+    no->ano = ano;
+    no->op = op;
+    no->valor = valor;
+    no->saldo = saldo;
+    no->prox = NULL;
+    return no;
+}
+
+TExt* insereNo(TExt* lista, int dia, int mes, int ano, int op, double valor, double saldo){
+    TExt* teste;
+    if((lista) == NULL){
+        return novo(dia, mes, ano, op, valor, saldo);
+    }
+    else{
+        teste = novo(dia, mes, ano, op, valor, saldo);
+        teste->prox = lista;
+        return teste;
+    }
+}
+
 //Erro na abertura arquivo
 void erroAbert(int e){
     if(e == 1)
@@ -171,15 +195,16 @@ boolean salvaSaldo(int ag, int conta, double saldo){
 
 boolean gravaOperacao(int ag, int conta, int op, double valor, double saldo){
     char caminho[100];
-    TDia* dta = tempo();
+    TDia* dataAtual = tempo();
+    TExt* e = NULL;
     sprintf(caminho, "agencias/%d/%d/operacoes.txt", ag, conta);
-    FILE* operacoes = fopen(caminho, "r+");
+    FILE* operacoes = fopen(caminho, "a+");
     if(operacoes == NULL){
-        FILE* operacoes = fopen(caminho, "w+");
+        erroAbert(4);
+        fclose(operacoes);
+        return 0;
     }
-    fseek(operacoes, 0, SEEK_END);
-    
-    fprintf(operacoes, "\n%d %d %d %d %lf %lf", dta->dia, dta->mes, dta->ano, op, valor, saldo);
+    fprintf(operacoes, "%d %d %d %d %lf %lf\n", dataAtual->dia, dataAtual->mes, dataAtual->ano, op, valor, saldo);
     fclose(operacoes);
 }
 
@@ -189,7 +214,7 @@ void consultarSaldo(int ag, int conta){
     printf("Nome do Titular: %s\n", nome);    
     printf("Agencia: %d\n", ag);
     printf("Conta: %d\n", conta);    
-    printf("Saldo: %lf\n", pegaSaldo(ag, conta));
+    printf("Saldo: %2.lf\n", pegaSaldo(ag, conta));
 }
 
 void saque(int ag, int conta){
@@ -198,7 +223,7 @@ void saque(int ag, int conta){
     printf("Qual valor deseja sacar?\n");
     scanf("%lf", &valor);
     if((saldo-valor) < 0){
-        printf("Valor não disponivel para saque!\n");
+        printf("Valor nao disponivel para saque!\n");
         return;
     }
         salvaSaldo(ag, conta, (saldo-valor));
@@ -235,7 +260,7 @@ saldo += valorDep;
         printf("Deposito realizado.\n");
     }
     else{
-        printf("Deposito não realizado.\n");
+        printf("Deposito nao realizado.\n");
     } 
 
     gravaOperacao(ag, conta, 1, valorDep, saldo);
@@ -246,7 +271,7 @@ void extrato(int ag, int conta){
     TDia data;
     TDia* atual = tempo();
     char* nome = pegaNome(ag, conta);
-    int op;
+    int op, i;
     char caminho[100];
     double valor, saldo;
     sprintf(caminho, "agencias/%d/%d/operacoes.txt", ag, conta);
@@ -255,21 +280,28 @@ void extrato(int ag, int conta){
         printf("Nenhuma operacao foi realizada ainda.");
         return;   
     }
-    printf("Titular: %s Agencia: %d Conta: %d\n", nome);
-    printf("_________________________________________");
+    if(!feof(operacoes)){
+        printf("Titular: %s Agencia: %d Conta: %d\n", nome, ag, conta);
+        printf("_________________________________________\n");
+    }
+    i=0;
     while(!feof(operacoes)){
-        fscanf(operacoes, "%d %d %d %d %lf %ld",data.dia, data.mes, data.ano, op, valor, saldo);
+        fscanf(operacoes, "%d %d %d %d %lf %lf\n",&data.dia, &data.mes, &data.ano, &op, &valor, &saldo);
         if(data.mes == atual->mes){
-            printf("%d/%d/%d - ");
+            printf("%d/%d/%d - ",data.dia, data.mes, data.ano);
+            i++;
             if(op){
-                printf("Deposito no valor de: R$%lf totalizando R$%lf", valor, saldo);
+                printf("Deposito no valor de: R$%2.lf totalizando R$%2.lf\n", valor, saldo);
             }
             else{
-                printf("Saque no valor de: R$%lf totalizando R$%lf", valor, saldo);
+                printf("Saque no valor de: R$%2.lf totalizando R$%2.lf\n", valor, saldo);
             }
         }
     }
+    if(i == 0)
+        printf("Nenhuma operacao foi encontrada neste mes.\n");
     fclose(operacoes);
+
 }
 
 
@@ -320,9 +352,11 @@ void login(int ag, int conta, int senha){
                 printf("\nObrigado por utilizar nosso Banco!");
                 break;
             default:
-                printf("Opção errada %s tente outra!");
+                printf("Opcao errada %s tente outra!");
                 break;
             }
+            system("sleep 01");
+            system("cls");
         }while(op != 0);
     }
     else{
