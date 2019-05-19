@@ -106,17 +106,24 @@ char* pegaNome(int ag, int conta){
     }
     
     if(nome1[0] == 35){ //35 é a #
-    sprintf(nome,"%s %s %s", (nome1+1), nome2, nome3);
-        fclose(infos);
-        return nome;
+        if(nome3[0] == 35){
+            sprintf(nome,"%s %s", (nome1+1), nome2);
+            fclose(infos);
+            return nome;
+        }
+        else{
+            sprintf(nome,"%s %s %s", (nome1+1), nome2, nome3);
+            fclose(infos);
+            return nome;
+        }
     }
     fclose(infos);
     return NULL;
 }
 
-dia tempo(){
+TDia* tempo(){
     time_t mytime;
-    dia* hoje = malloc(sizeof(dia));
+    TDia* hoje = malloc(sizeof(TDia));
     mytime = time(NULL);
     struct tm tm = *localtime(&mytime);
     printf("Data: %d%d%d\n", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900);
@@ -140,12 +147,12 @@ void saque(){
 
 void deposito(int ag, int conta){
     char caminho[100];
-    sprintf(caminho, "agencias/%d/%d/infos.txt", ag, conta);
+    sprintf(caminho, "agencias/%d/%d/caixa.txt", ag, conta);
     FILE* infos = fopen(caminho, "r+");
     if(infos == NULL){
         erroAbert(4);
         fclose(infos);
-        return NULL;
+        return ;
     }
 
     
@@ -163,17 +170,17 @@ void login(int ag, int conta, int senha){
 
         int op = 0;
         printf("[Login Efetuado]\n\n");
-        printf("Ola %s ", nome);
+        printf("Ola %s,\n", nome);
         
         do{
-            printf("O que deseja fazer?\n");
+            printf("\nO que deseja fazer?\n");
             printf("1. Extrato\n");
             printf("2. Consultar Saldo\n");
             printf("3. Saque\n");
             printf("4. Deposito\n");
             printf("0. Sair\n");
             
-            scanf("%d", op);
+            scanf("%d", &op);
             switch (op)
             {
             case 1:
@@ -186,9 +193,11 @@ void login(int ag, int conta, int senha){
                 saque();
                 break;
             case 4:
-                deposito();
+                deposito(ag, conta);
                 break;
-            
+            case 0:
+                printf("\nObrigado por utilizar nosso Banco!");
+                break;
             default:
                 printf("Opção errada %s tente outra!");
                 break;
