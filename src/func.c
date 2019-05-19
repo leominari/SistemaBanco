@@ -242,10 +242,10 @@ void deposito(int ag, int conta){
     int op;
     double valorDep = 0;
 
-    printf("Qual o valor do Deposito?\n");
+    printf("\nQual o valor do Deposito?\n");
     scanf("%lf", &valorDep);
 
-    printf("Beneficiado: %s\nAg: %d\nConta: %d\nValor: %lf\n", nome, ag, conta, valorDep);
+    printf("\nBeneficiado: %s\nAg: %d\nConta: %d\nValor: %.2lf\n", nome, ag, conta, valorDep);
     printf("Informacoes Corretas?\n1.Sim | 2.Nao\n");
     scanf("%d", &op);
 
@@ -282,7 +282,7 @@ void extrato(int ag, int conta){
     }
     if(!feof(operacoes)){
         printf("Titular: %s Agencia: %d Conta: %d\n", nome, ag, conta);
-        printf("_________________________________________\n");
+        printf("_________________________________________\n\n");
     }
     i=0;
     while(!feof(operacoes)){
@@ -291,10 +291,10 @@ void extrato(int ag, int conta){
             printf("%d/%d/%d - ",data.dia, data.mes, data.ano);
             i++;
             if(op){
-                printf("Deposito no valor de: R$%2.lf totalizando R$%2.lf\n", valor, saldo);
+                printf("Deposito no valor de: R$%.2lf totalizando R$%.2lf\n", valor, saldo);
             }
             else{
-                printf("Saque no valor de: R$%2.lf totalizando R$%2.lf\n", valor, saldo);
+                printf("Saque no valor de: R$%.2lf totalizando R$%.2lf\n", valor, saldo);
             }
         }
     }
@@ -355,8 +355,8 @@ void login(int ag, int conta, int senha){
                 printf("Opcao errada %s tente outra!");
                 break;
             }
-            system("sleep 01");
-            system("cls");
+            // system("sleep 20");
+            // system("cls");
         }while(op != 0);
     }
     else{
