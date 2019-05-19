@@ -12,11 +12,12 @@
 |v0.7|`Refinamento Login e Tratamento do Nome`            |
 |v0.8|`Função data e começo das outras funções`            |
 |v0.9|`Melhora da interface e correção de Bugs`            |
+|**v1.0**|`Adicionado Deposito e Correção de Bugs`            |
 
 
 
  - [ ] Extrato
  - [ ] Saque
- - [ ] Depósito
+ - [X] Depósito
  - [ ] Consulta ao Saldo
  - [X] Login

@@ -126,7 +126,6 @@ TDia* tempo(){
     TDia* hoje = malloc(sizeof(TDia));
     mytime = time(NULL);
     struct tm tm = *localtime(&mytime);
-    printf("Data: %d%d%d\n", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900);
     hoje->dia = tm.tm_mday;
     hoje->mes = tm.tm_mon + 1;
     hoje->ano = tm.tm_year + 1900;
@@ -145,16 +144,91 @@ void saque(){
 
 }
 
-void deposito(int ag, int conta){
+double pegaSaldo(int ag, int conta){
+    char valorS[30];
+    double valor;
     char caminho[100];
     sprintf(caminho, "agencias/%d/%d/caixa.txt", ag, conta);
-    FILE* infos = fopen(caminho, "r+");
-    if(infos == NULL){
+    FILE* caixa = fopen(caminho, "r+");
+    if(caixa == NULL){
         erroAbert(4);
-        fclose(infos);
-        return ;
+        system("sleep 02");
+        fclose(caixa);
+        return 0;
     }
 
+    fscanf(caixa, "%s", valorS);
+    valor = atof(valorS);
+    fclose(caixa);
+    return valor;
+}
+
+boolean salvaSaldo(int ag, int conta, double saldo){
+    char caminho[100];
+    sprintf(caminho, "agencias/%d/%d/caixa.txt", ag, conta);
+    // remove(caminho);
+    FILE* caixa = fopen(caminho, "w+");
+    if(caixa == NULL){
+        erroAbert(4);
+        system("sleep 02");
+        fclose(caixa);
+        return 0;
+    }
+
+    fprintf(caixa, "%lf", saldo);
+    fclose(caixa);
+    return 1;
+}
+
+
+boolean gravaOperacao(int ag, int conta, int op, double valor){
+    char caminho[100];
+    TDia* dta = tempo();
+    sprintf(caminho, "agencias/%d/%d/operacoes.txt", ag, conta);
+    FILE* operacoes = fopen(caminho, "r+");
+    if(operacoes == NULL){
+        FILE* operacoes = fopen(caminho, "w+");
+    }
+    fseek(operacoes, 0, SEEK_END);
+    
+    fprintf(operacoes, "\n%d %d %d %d %lf", dta->dia, dta->mes, dta->ano, op, valor);
+    fclose(operacoes);
+}
+
+void deposito(int ag, int conta){
+    //Verifica se a conta pro deposito é valida
+    if(!(verAg(ag) && verConta(ag, conta))){
+        printf("Dados Invalidos!\n");
+        return;
+    }
+    double saldo = pegaSaldo(ag, conta);
+    char* nome = pegaNome(ag, conta);
+    int op;
+    double valorDep = 0;
+
+    printf("Qual o valor do Deposito?\n");
+    scanf("%lf", &valorDep);
+
+    printf("Beneficiado: %s\nAg: %d\nConta: %d\nValor: %lf\n", nome, ag, conta, valorDep);
+    printf("Informacoes Corretas?\n 1.Sim | 2.Nao\n");
+    scanf("%d", &op);
+
+    if(op == 2){
+        system("cls");
+        printf("Operacao Cancelada!\n");
+        system("sleep 02");
+        return;
+    }
+
+    saldo += valorDep;
+    if(salvaSaldo(ag, conta, saldo)){
+        printf("Deposito realizado.\n");
+    }
+    else{
+        printf("Deposito não realizado.\n");
+    } 
+
+    gravaOperacao(ag, conta, 1, valorDep);
     
 }
 
@@ -169,6 +243,8 @@ void login(int ag, int conta, int senha){
         }
 
         int op = 0;
+        int agDep;
+        int contaDep;
         printf("[Login Efetuado]\n\n");
         printf("Ola %s,\n", nome);
         
@@ -193,7 +269,11 @@ void login(int ag, int conta, int senha){
                 saque();
                 break;
             case 4:
-                deposito(ag, conta);
+                printf("Agencia do Deposito: ");
+                scanf("%d",&agDep);
+                printf("Conta do Deposito: ");
+                scanf("%d",&contaDep);
+                deposito(agDep, contaDep);
                 break;
             case 0:
                 printf("\nObrigado por utilizar nosso Banco!");

@@ -10,8 +10,11 @@ int main(){
     int conta = 0;
     int senha = 0;
     int op;
+
+    // salvaSaldo(1,1,150.5);
     while(1){
-        printf("Bem vindo ao Hulema\nRealize Login\n");
+        system("cls");
+        printf("Bem vindo ao Hulema\n");
         printf("1. Realizar Login\n");
         printf("2. Depositar\n");
         scanf("%d", &op);
