@@ -1,3 +1,5 @@
+#include "func.h"
+
 //Erro na abertura arquivo
 void erroAbert(int e){
     if(e == 1)
@@ -112,6 +114,43 @@ char* pegaNome(int ag, int conta){
     return NULL;
 }
 
+dia tempo(){
+    time_t mytime;
+    dia* hoje = malloc(sizeof(dia));
+    mytime = time(NULL);
+    struct tm tm = *localtime(&mytime);
+    printf("Data: %d%d%d\n", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900);
+    hoje->dia = tm.tm_mday;
+    hoje->mes = tm.tm_mon + 1;
+    hoje->ano = tm.tm_year + 1900;
+    return hoje;
+}
+
+void extrato(){
+
+}
+
+void consultarSaldo(){
+
+}
+
+void saque(){
+
+}
+
+void deposito(int ag, int conta){
+    char caminho[100];
+    sprintf(caminho, "agencias/%d/%d/infos.txt", ag, conta);
+    FILE* infos = fopen(caminho, "r+");
+    if(infos == NULL){
+        erroAbert(4);
+        fclose(infos);
+        return NULL;
+    }
+
+    
+}
+
 void login(int ag, int conta, int senha){
 
     if(verAg(ag) && verConta(ag, conta) && verSenha(ag, conta, senha)){
@@ -121,8 +160,40 @@ void login(int ag, int conta, int senha){
             erroAbert(4);
             return;
         }
+
+        int op = 0;
         printf("[Login Efetuado]\n\n");
-        printf("Ola %s\n", nome);
+        printf("Ola %s ", nome);
+        
+        do{
+            printf("O que deseja fazer?\n");
+            printf("1. Extrato\n");
+            printf("2. Consultar Saldo\n");
+            printf("3. Saque\n");
+            printf("4. Deposito\n");
+            printf("0. Sair\n");
+            
+            scanf("%d", op);
+            switch (op)
+            {
+            case 1:
+                extrato();
+                break;
+            case 2:
+                consultarSaldo();
+                break;
+            case 3:
+                saque();
+                break;
+            case 4:
+                deposito();
+                break;
+            
+            default:
+                printf("Opção errada %s tente outra!");
+                break;
+            }
+        }while(op != 0);
     }
     else{
         printf("Falha no Login: Informacoes Erradas.\n");
