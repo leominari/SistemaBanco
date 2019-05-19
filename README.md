@@ -13,11 +13,12 @@
 |v0.8|`Função data e começo das outras funções`            |
 |v0.9|`Melhora da interface e correção de Bugs`            |
 |**v1.0**|`Adicionado Deposito e Correção de Bugs`            |
+|v1.1|`Adicionado varias funções`            |
 
 
 
- - [ ] Extrato
- - [ ] Saque
+ - [X] Extrato
+ - [X] Saque
  - [X] Depósito
- - [ ] Consulta ao Saldo
+ - [X] Consulta ao Saldo
  - [X] Login

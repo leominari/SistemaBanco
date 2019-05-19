@@ -132,18 +132,6 @@ TDia* tempo(){
     return hoje;
 }
 
-void extrato(){
-
-}
-
-void consultarSaldo(){
-
-}
-
-void saque(){
-
-}
-
 double pegaSaldo(int ag, int conta){
     char valorS[30];
     double valor;
@@ -181,7 +169,7 @@ boolean salvaSaldo(int ag, int conta, double saldo){
 }
 
 
-boolean gravaOperacao(int ag, int conta, int op, double valor){
+boolean gravaOperacao(int ag, int conta, int op, double valor, double saldo){
     char caminho[100];
     TDia* dta = tempo();
     sprintf(caminho, "agencias/%d/%d/operacoes.txt", ag, conta);
@@ -191,8 +179,31 @@ boolean gravaOperacao(int ag, int conta, int op, double valor){
     }
     fseek(operacoes, 0, SEEK_END);
     
-    fprintf(operacoes, "\n%d %d %d %d %lf", dta->dia, dta->mes, dta->ano, op, valor);
+    fprintf(operacoes, "\n%d %d %d %d %lf %lf", dta->dia, dta->mes, dta->ano, op, valor, saldo);
     fclose(operacoes);
+}
+
+void consultarSaldo(int ag, int conta){
+    char* nome = pegaNome(ag, conta);
+
+    printf("Nome do Titular: %s\n", nome);    
+    printf("Agencia: %d\n", ag);
+    printf("Conta: %d\n", conta);    
+    printf("Saldo: %lf\n", pegaSaldo(ag, conta));
+}
+
+void saque(int ag, int conta){
+    double valor;
+    double saldo = pegaSaldo(ag, conta);
+    printf("Qual valor deseja sacar?\n");
+    scanf("%lf", &valor);
+    if((saldo-valor) < 0){
+        printf("Valor não disponivel para saque!\n");
+        return;
+    }
+        salvaSaldo(ag, conta, (saldo-valor));
+        gravaOperacao(ag, conta, 0, valor, (saldo-valor));
+        printf("Saque realizado!");
 }
 
 void deposito(int ag, int conta){
@@ -210,7 +221,7 @@ void deposito(int ag, int conta){
     scanf("%lf", &valorDep);
 
     printf("Beneficiado: %s\nAg: %d\nConta: %d\nValor: %lf\n", nome, ag, conta, valorDep);
-    printf("Informacoes Corretas?\n 1.Sim | 2.Nao\n");
+    printf("Informacoes Corretas?\n1.Sim | 2.Nao\n");
     scanf("%d", &op);
 
     if(op == 2){
@@ -219,8 +230,7 @@ void deposito(int ag, int conta){
         system("sleep 02");
         return;
     }
-
-    saldo += valorDep;
+saldo += valorDep;
     if(salvaSaldo(ag, conta, saldo)){
         printf("Deposito realizado.\n");
     }
@@ -228,9 +238,40 @@ void deposito(int ag, int conta){
         printf("Deposito não realizado.\n");
     } 
 
-    gravaOperacao(ag, conta, 1, valorDep);
+    gravaOperacao(ag, conta, 1, valorDep, saldo);
     
 }
+
+void extrato(int ag, int conta){
+    TDia data;
+    TDia* atual = tempo();
+    char* nome = pegaNome(ag, conta);
+    int op;
+    char caminho[100];
+    double valor, saldo;
+    sprintf(caminho, "agencias/%d/%d/operacoes.txt", ag, conta);
+    FILE* operacoes = fopen(caminho, "r+");
+    if(operacoes == NULL){
+        printf("Nenhuma operacao foi realizada ainda.");
+        return;   
+    }
+    printf("Titular: %s Agencia: %d Conta: %d\n", nome);
+    printf("_________________________________________");
+    while(!feof(operacoes)){
+        fscanf(operacoes, "%d %d %d %d %lf %ld",data.dia, data.mes, data.ano, op, valor, saldo);
+        if(data.mes == atual->mes){
+            printf("%d/%d/%d - ");
+            if(op){
+                printf("Deposito no valor de: R$%lf totalizando R$%lf", valor, saldo);
+            }
+            else{
+                printf("Saque no valor de: R$%lf totalizando R$%lf", valor, saldo);
+            }
+        }
+    }
+    fclose(operacoes);
+}
+
 
 void login(int ag, int conta, int senha){
 
@@ -260,13 +301,13 @@ void login(int ag, int conta, int senha){
             switch (op)
             {
             case 1:
-                extrato();
+                extrato(ag, conta);
                 break;
             case 2:
-                consultarSaldo();
+                consultarSaldo(ag, conta);
                 break;
             case 3:
-                saque();
+                saque(ag, conta);
                 break;
             case 4:
                 printf("Agencia do Deposito: ");
