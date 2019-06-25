@@ -10,8 +10,6 @@ int main(){
     int conta = 0;
     int senha = 0;
     int op;
-
-    // salvaSaldo(1,1,150.5);
     while(1){
         system("cls");
         printf("Bem vindo ao Hulema\n");
@@ -36,7 +34,7 @@ int main(){
             scanf("%d",&ag);
             printf("Conta do Deposito: ");
             scanf("%d",&conta);
-            deposito(ag, conta);
+            deposito(ag, conta, verConta(ag, conta));
             break;        
         default:
             printf("Operacao inexistente!");

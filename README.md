@@ -16,10 +16,15 @@
 |v1.1|`Adicionado varias funções`            |
 |v1.2|`Correção do Extrato`            |
 |v1.3|`Correção Visual`            |
-
+|v1.4|`Conta Poupança, Conta Corrente e Transferencia inseridas.`            |
 
  - [X] Extrato
  - [X] Saque
  - [X] Depósito
  - [X] Consulta ao Saldo
  - [X] Login
+ - [X] Conta Poupança
+ - [X] Conta Corrente
+ - [X] Transferência Bancaria
+ - [] Recarga de Celular
+ - [] Empréstimo
