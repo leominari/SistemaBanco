@@ -26,5 +26,5 @@
  - [X] Conta Poupança
  - [X] Conta Corrente
  - [X] Transferência Bancaria
- - [] Recarga de Celular
- - [] Empréstimo
+ - [ ] Recarga de Celular
+ - [ ] Empréstimo
