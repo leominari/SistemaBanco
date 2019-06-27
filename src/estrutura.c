@@ -20,7 +20,7 @@ void insere(TCel **prim, int identificador, int ddd, int telefone)
         return;
     }
     else
-        insere(&((*prim)->prox), chave);
+        insere(&((*prim)->prox), identificador, ddd, telefone);
 }
 
 void elimina_lista(TCel *prim)
