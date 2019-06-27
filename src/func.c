@@ -1,34 +1,6 @@
 #include "func.h"
 #include "estrutura.c"
 
-TExt *novo(int dia, int mes, int ano, int op, double valor, double saldo)
-{
-    TExt *no = malloc(sizeof(TExt));
-    no->dia = dia;
-    no->mes = mes;
-    no->ano = ano;
-    no->op = op;
-    no->valor = valor;
-    no->saldo = saldo;
-    no->prox = NULL;
-    return no;
-}
-
-TExt *insereNo(TExt *lista, int dia, int mes, int ano, int op, double valor, double saldo)
-{
-    TExt *teste;
-    if ((lista) == NULL)
-    {
-        return novo(dia, mes, ano, op, valor, saldo);
-    }
-    else
-    {
-        teste = novo(dia, mes, ano, op, valor, saldo);
-        teste->prox = lista;
-        return teste;
-    }
-}
-
 //Erro na abertura arquivo
 void erroAbert(int e)
 {
@@ -474,19 +446,19 @@ boolean salvarNumeroCelular(int ag, int conta, int operadora, int ddd, int telef
         fclose(celulares);
         return 0;
     }
-    fprintf("%d %d %d", operadora, ddd, telefone);
+    fprintf(celulares, "%d %d %d\n", operadora, ddd, telefone);
     fclose(celulares);
     return 1;
 }
 
 boolean recarga(int ag, int conta)
 {
-    TCel *celulares = NULL;
+    TCel *celular = NULL;
     TCel *celRecarga;
     char caminho[100];
     int operadora, ddd, telefone;
     int preCadastrado;
-    int i = 1;
+    int i = 0;
     int selecionado;
     int valor;
     int dddVer;
@@ -509,7 +481,7 @@ boolean recarga(int ag, int conta)
         while (!feof(celulares))
         {
             i++;
-            fscanf("%d %d %d", &operadora & ddd, &telefone);
+            fscanf(celulares, "%d %d %d", &operadora, &ddd, &telefone);
             printf("%d. ", i);
             switch (operadora)
             {
@@ -524,11 +496,12 @@ boolean recarga(int ag, int conta)
                 break;
             default:
                 printf("Erro!");
-                return;
+                return 0;
+                fclose(celulares);
                 break;
             }
-            printf(" (%d) %d\n", i, ddd, telefone);
-            insere(celulares, i, ddd, telefone);
+            printf(" (%d) %d\n", ddd, telefone);
+            insere(&celular, i, ddd, telefone);
         }
         printf("Qual quer utilizar?\n");
         scanf("%d", &selecionado);
@@ -538,11 +511,11 @@ boolean recarga(int ag, int conta)
             fclose(celulares);
             return 0;
         }
-        celRecarga = busca(celulares, selecionado);
+        celRecarga = busca(celular, selecionado);
     }
     else
     {
-        printf("Escolha a Operadora.");
+        printf("Escolha a Operadora.\n");
         printf("1. TIM\n");
         printf("2. CLARO\n");
         printf("3. VIVO\n");
@@ -555,12 +528,24 @@ boolean recarga(int ag, int conta)
         scanf("%d", &dddVer);
         printf("Repita o Numero?\n");
         scanf("%d", &telefoneVer);
-        if(!((ddd == dddVer) && (telefone == telefoneVer))){
+        if (!((ddd == dddVer) && (telefone == telefoneVer)))
+        {
             printf("Telefone Invalido!");
-            return;
+            fclose(celulares);
+            return 0;
+        }
+        fclose(celulares);
+        FILE *celulares = fopen(caminho, "a+");
+        if (celulares == NULL)
+        {
+            erroAbert(4);
+            fclose(celulares);
+            return 0;
         }
         salvarNumeroCelular(ag, conta, operadora, ddd, telefone);
+        fclose(celulares);
     }
+    
     printf("Qual valor deseja recarregar?\n");
     printf("1. R$15,00\n");
     printf("2. R$20,00\n");
@@ -583,8 +568,13 @@ boolean recarga(int ag, int conta)
         sacar(ag, conta, 50, verConta(ag, conta));
         break;
     default:
-        printf("Valor invalido!") break;
+        printf("Valor invalido!");
+        fclose(celulares);
+        return 0;
+        break;
     }
+    fclose(celulares);
+    return 1;
 }
 
 void login(int ag, int conta, int senha)
@@ -623,6 +613,7 @@ void login(int ag, int conta, int senha)
             printf("3. Saque\n");
             printf("4. Deposito\n");
             printf("5. Transferencia\n");
+            printf("6. Recarga de Celular\n");
             printf("0. Sair\n");
 
             scanf("%d", &op);
@@ -668,7 +659,9 @@ void login(int ag, int conta, int senha)
                 free(nome);
                 break;
             case 6:
-                recarga();
+                if(recarga(ag, conta)){
+                    printf("Recarga Efetuada!");
+                }
                 break;
             case 0:
                 printf("\nObrigado por utilizar nosso Banco!");
