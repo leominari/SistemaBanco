@@ -545,7 +545,7 @@ boolean recarga(int ag, int conta)
         salvarNumeroCelular(ag, conta, operadora, ddd, telefone);
         fclose(celulares);
     }
-    
+
     printf("Qual valor deseja recarregar?\n");
     printf("1. R$15,00\n");
     printf("2. R$20,00\n");
@@ -575,6 +575,20 @@ boolean recarga(int ag, int conta)
     }
     fclose(celulares);
     return 1;
+}
+
+boolean emprestimo(int ag, int conta)
+{
+    printf("Quantos meses quer pagar?\n");
+    printf("1. 12\n");
+    printf("1. 24\n");
+    printf("1. 36\n");
+    printf("1. 48\n");
+    printf("1. 60\n");
+    printf("1. 72\n");
+    printf("1. 84\n");
+    printf("1. 96\n");
+    return true;
 }
 
 void login(int ag, int conta, int senha)
@@ -614,7 +628,8 @@ void login(int ag, int conta, int senha)
             printf("4. Deposito\n");
             printf("5. Transferencia\n");
             printf("6. Recarga de Celular\n");
-            printf("0. Sair\n");
+            printf("7. Emprestimo")
+                printf("0. Sair\n");
 
             scanf("%d", &op);
             switch (op)
@@ -659,9 +674,13 @@ void login(int ag, int conta, int senha)
                 free(nome);
                 break;
             case 6:
-                if(recarga(ag, conta)){
+                if (recarga(ag, conta))
+                {
                     printf("Recarga Efetuada!");
                 }
+                break;
+            case 7:
+                emprestimo(ag, conta);
                 break;
             case 0:
                 printf("\nObrigado por utilizar nosso Banco!");
