@@ -17,6 +17,7 @@
 |v1.2|`Correção do Extrato`            |
 |v1.3|`Correção Visual`            |
 |v1.4|`Conta Poupança, Conta Corrente e Transferencia inseridas.`            |
+|v1.5|`Recarga de Celular.`            |
 
  - [X] Extrato
  - [X] Saque
@@ -26,7 +27,7 @@
  - [X] Conta Poupança
  - [X] Conta Corrente
  - [X] Transferência Bancaria
- - [ ] Recarga de Celular
+ - [X] Recarga de Celular
  - [ ] Empréstimo
  - [ ] Juros
 
