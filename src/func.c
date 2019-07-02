@@ -681,6 +681,124 @@ boolean atualizaEmprestimo(int ag, int conta, int numParcelas, double valorParce
     fclose(emprestimoJuros);
     return 1;
 }
+
+boolean cobraLimite(int ag, int conta)
+{
+
+    double verificaLim = pegaLimite(ag, conta);
+    if (verificaLim < 0)
+    {
+        printf("Erro na verificacao do emprestimo!\n");
+        return 0;
+
+        TDia dtaEmp;
+        TDia dtaUltPag;
+        TDia *dtaAtual = tempo();
+        TDia help;
+        double saldoDev;
+        int numPar;
+        int mesAtras;
+        int diaTemp, mesTemp, anoTemp;
+        double vlrPar;
+        char caminho[100];
+        double valor = 0;
+        int dias = 0;
+        int parcelas;
+        sprintf(caminho, "agencias/%d/%d/emprestimoJuros.txt", ag, conta);
+        FILE *emprestimoJuros = fopen(caminho, "rw+");
+        if (emprestimoJuros == NULL)
+        {
+            erroAbert(4);
+            fclose(emprestimoJuros);
+            return 0;
+        }
+
+        fscanf(emprestimoJuros, "%d %lf %d %d %d %d %d %d", &numPar, &vlrPar, &dtaEmp.dia, &dtaEmp.mes, &dtaEmp.ano, &dtaUltPag.dia, &dtaUltPag.mes, &dtaUltPag.ano);
+        printf("%d", dtaUltPag.ano);
+        if (dtaUltPag.ano == -1)
+        {
+
+            help.ano = dtaAtual->ano - dtaEmp.ano;
+            if (help.ano == 0)
+            {
+                help.mes = dtaAtual->mes - dtaEmp.mes;
+                if (help.mes > 0)
+                {
+                    help.dia = dtaEmp.dia - dtaAtual->dia;
+                    if (help.dia < 0)
+                    {
+                        help.mes--;
+                    }
+                }
+            }
+            else
+            {
+                help.mes = dtaAtual->mes - dtaEmp.mes;
+                if (help.mes < 0)
+                {
+                    help.ano--;
+                }
+                else
+                {
+                    help.dia = dtaAtual->dia - dtaEmp.dia;
+                    if (help.dia < 0)
+                    {
+                        help.mes--;
+                    }
+                }
+            }
+        }
+        else
+        {
+            help.ano = dtaAtual->ano - dtaUltPag.ano;
+            if (help.ano == 0)
+            {
+                help.mes = dtaAtual->mes - dtaUltPag.mes;
+                if (help.mes > 0)
+                {
+                    help.dia = dtaUltPag.dia - dtaAtual->dia;
+                    if (help.dia < 0)
+                    {
+                        help.mes--;
+                    }
+                }
+            }
+            else
+            {
+                help.mes = dtaAtual->mes - dtaUltPag.mes;
+                if (help.mes < 0)
+                {
+                    help.ano--;
+                }
+                else
+                {
+                    help.dia = dtaAtual->dia - dtaUltPag.dia;
+                    if (help.dia < 0)
+                    {
+                        help.mes--;
+                    }
+                }
+            }
+        }
+        parcelas = ((help.ano * 12) + help.mes);
+        numPar = numPar - parcelas;
+        if (numPar < 0)
+        {
+            valor = numPar * vlrPar;
+        }
+        else
+        {
+            valor = parcelas * vlrPar;
+        }
+        atualizaEmprestimo(ag, conta, numPar, vlrPar, dtaEmp.dia, dtaEmp.mes, dtaEmp.ano);
+        printf("%lf", valor);
+        sacar(ag, conta, valor, verConta(ag, conta));
+        free(dtaAtual);
+        fclose(emprestimoJuros);
+        return 1;
+    }
+}
+
 boolean cobraEmprestimo(int ag, int conta)
 {
     int verifEmp = verEmprestimo(ag, conta);
@@ -725,9 +843,9 @@ boolean cobraEmprestimo(int ag, int conta)
         if (help.ano == 0)
         {
             help.mes = dtaAtual->mes - dtaEmp.mes;
-            if (mes > 0)
+            if (help.mes > 0)
             {
-                help.dia = dtaEmp.dia - dtaAtual.dia;
+                help.dia = dtaEmp.dia - dtaAtual->dia;
                 if (help.dia < 0)
                 {
                     help.mes--;
@@ -757,9 +875,9 @@ boolean cobraEmprestimo(int ag, int conta)
         if (help.ano == 0)
         {
             help.mes = dtaAtual->mes - dtaUltPag.mes;
-            if (mes > 0)
+            if (help.mes > 0)
             {
-                help.dia = dtaUltPag.dia - dtaAtual.dia;
+                help.dia = dtaUltPag.dia - dtaAtual->dia;
                 if (help.dia < 0)
                 {
                     help.mes--;
@@ -783,92 +901,16 @@ boolean cobraEmprestimo(int ag, int conta)
             }
         }
     }
-    parcelas = ((help.ano * 12) + help.mes) ;
-    valor = parcelas * vlrPar;
-    //     while ((help.dia != dtaAtual->dia) && (help.mes != dtaAtual->mes) && (help.ano != dtaAtual->ano))
-    //     {
-    //         help.dia++;
-    //         dias++;
-    //         if (help.dia == 30)
-    //         {
-
-    //             if (help.mes == 12)
-    //             {
-    //                 help.ano++;
-    //                 help.mes = 1;
-    //             }
-    //             else
-    //                 help.mes++;
-    //             help.dia = dtaEmp.dia;
-    //         }
-    //     }
-    //     parcelas = (int)(dias / 30);
-    //     if (parcelas > numPar)
-    //     {
-    //         valor = numPar * vlrPar;
-    //         numPar = 0;
-    //     }
-    //     else
-    //     {
-    //         if (parcelas == numPar)
-    //         {
-    //             valor = numPar * vlrPar;
-    //             numPar = 0;
-    //         }
-    //         else
-    //         {
-    //             valor = vlrPar + (vlrPar * (int)(dias / 30));
-    //             dtaUltPag.dia = dtaEmp.dia;
-    //             dtaUltPag.mes = dtaAtual->mes;
-    //             dtaUltPag.ano = dtaAtual->ano;
-    //             numPar = numPar - parcelas;
-    //         }
-    //     }
-    // }
-    // else
-    // {
-    //     help.dia = dtaUltPag.dia;
-    //     help.mes = dtaUltPag.mes;
-    //     help.ano = dtaUltPag.ano;
-    //     while (help.dia != dtaAtual->dia && help.mes != dtaAtual->mes && help.ano != dtaAtual->ano)
-    //     {
-    //         help.dia++;
-    //         dias++;
-    //         if (help.dia == 30)
-    //         {
-    //             if (help.mes == 12)
-    //             {
-    //                 help.ano++;
-    //                 help.mes = 1;
-    //             }
-    //             else
-    //                 help.mes++;
-    //             help.dia = dtaEmp.dia;
-    //         }
-    //     }
-    //     parcelas = (int)(dias / 30);
-    //     if (parcelas > numPar)
-    //     {
-    //         valor = numPar * vlrPar;
-    //         numPar = 0;
-    //     }
-    //     else
-    //     {
-    //         if (parcelas == numPar)
-    //         {
-    //             valor = numPar * vlrPar;
-    //             numPar = 0;
-    //         }
-    //         else
-    //         {
-    //             valor = vlrPar + (vlrPar * (int)(dias / 30));
-    //             dtaUltPag.dia = dtaEmp.dia;
-    //             dtaUltPag.mes = dtaAtual->mes;
-    //             dtaUltPag.ano = dtaAtual->ano;
-    //             numPar = numPar - parcelas;
-    //         }
-    //     }
-    // }
+    parcelas = ((help.ano * 12) + help.mes);
+    numPar = numPar - parcelas;
+    if (numPar < 0)
+    {
+        valor = numPar * vlrPar;
+    }
+    else
+    {
+        valor = parcelas * vlrPar;
+    }
     atualizaEmprestimo(ag, conta, numPar, vlrPar, dtaEmp.dia, dtaEmp.mes, dtaEmp.ano);
     printf("%lf", valor);
     sacar(ag, conta, valor, verConta(ag, conta));
@@ -933,6 +975,13 @@ boolean emprestimo(int ag, int conta)
             return 0;
         }
     }
+    else
+    {
+        if(valorEmprestimo == 0){
+            printf("Valor do emprestimo tem que ser maior que R$0,00\n");
+        }
+    }
+    
     printf("Em quantos meses quer pagar?\n");
     printf("1. 12\n");
     printf("2. 24\n");
