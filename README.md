@@ -18,6 +18,8 @@
 |v1.3|`Correção Visual`            |
 |v1.4|`Conta Poupança, Conta Corrente e Transferencia inseridas.`            |
 |v1.5|`Recarga de Celular.`            |
+|v1.6|`Conserto de erros.`            |
+|v1.7|`Adicionado Emprestimo.`            |
 
  - [X] Extrato
  - [X] Saque
@@ -28,6 +30,6 @@
  - [X] Conta Corrente
  - [X] Transferência Bancaria
  - [X] Recarga de Celular
- - [ ] Empréstimo
+ - [X] Empréstimo
  - [ ] Juros
 
