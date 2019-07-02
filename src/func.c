@@ -247,20 +247,39 @@ void consultarSaldo(int ag, int conta, int tipoConta)
     }
 }
 
-void sacar(int ag, int conta, double valor, int tipoConta)
+boolean juros(int ag, int conta, double usoLimite)
+{
+    char caminho[100];
+    TDia *dataAtual = tempo();
+    sprintf(caminho, "agencias/%d/%d/limite.txt", ag, conta);
+    FILE *jurosArq = fopen(caminho, "w+");
+    if (jurosArq == NULL)
+    {
+        erroAbert(4);
+        fclose(jurosArq);
+        return 0;
+    }
+
+    fprintf(jurosArq, "%lf %d %d %d", usoLimite, dataAtual->dia, dataAtual->mes, dataAtual->ano);
+    fclose(jurosArq);
+    return 1;
+}
+
+boolean sacar(int ag, int conta, double valor, int tipoConta, int dOnde)
 {
     double saldo = pegaSaldo(ag, conta);
     double limite = pegaLimite(ag, conta);
     double auxConta;
     if (tipoConta == 1)
     {
-        if ((saldo - valor) < 0)
+        if ((saldo - valor) < 0 && dOnde == 0)
         {
             printf("Valor nao disponivel!\n");
-            return;
+            return 0;
         }
         gravaOperacao(ag, conta, 0, valor, (saldo - valor), 0, tipoConta);
         salvaSaldoLimite(ag, conta, (saldo - valor), 0);
+        return 1;
     }
     else
     {
@@ -268,7 +287,8 @@ void sacar(int ag, int conta, double valor, int tipoConta)
         if (auxConta >= 0)
         {
             salvaSaldoLimite(ag, conta, (saldo - valor), limite);
-            gravaOperacao(ag, conta, 0, valor, (saldo - valor), auxConta, tipoConta);
+            gravaOperacao(ag, conta, 0, valor, (saldo - valor), limite, tipoConta);
+            return 1;
         }
         else
         {
@@ -277,10 +297,23 @@ void sacar(int ag, int conta, double valor, int tipoConta)
             {
                 salvaSaldoLimite(ag, conta, 0, auxConta);
                 gravaOperacao(ag, conta, 0, valor, 0, auxConta, tipoConta);
+                juros(ag, conta, (500 - auxConta));
+                return 1;
             }
             else
             {
-                printf("Valor nao disponivel!\n");
+                if (dOnde == 0)
+                {
+                    printf("Valor nao disponivel!\n");
+                    return 0;
+                }
+                else
+                {
+                    salvaSaldoLimite(ag, conta, auxConta, 0);
+                    gravaOperacao(ag, conta, 0, valor, auxConta, 0, tipoConta);
+                    juros(ag, conta, 500);
+                    return 1;
+                }
             }
         }
     }
@@ -295,8 +328,10 @@ void saque(int ag, int conta, int tipoConta)
     printf("Qual valor deseja sacar?\n");
     scanf("%lf", &valor);
 
-    sacar(ag, conta, valor, tipoConta);
-    printf("Saque realizado!");
+    if (sacar(ag, conta, valor, tipoConta, 0))
+    {
+        printf("Saque realizado!");
+    }
 }
 
 void depositar(int ag, int conta, double valor, int tipoConta)
@@ -317,10 +352,15 @@ void depositar(int ag, int conta, double valor, int tipoConta)
         {
             aux = limite - LMT;
             auxVal = valor + aux;
-            if ((auxVal) >= 0)
+            if (auxVal >= 0)
             {
                 saldo += auxVal;
-                limite = LMT;
+                if (saldo < 0)
+                {
+                    limite = LMT + saldo;
+                }
+                else
+                    limite = LMT;
             }
             else
             {
@@ -332,6 +372,7 @@ void depositar(int ag, int conta, double valor, int tipoConta)
             saldo += valor;
         }
         salvaSaldoLimite(ag, conta, saldo, limite);
+        juros(ag, conta, 500 - limite);
     }
     gravaOperacao(ag, conta, 1, valor, saldo, limite, tipoConta);
 }
@@ -462,6 +503,7 @@ boolean recarga(int ag, int conta)
     int operadora, ddd, telefone;
     int preCadastrado;
     int i = 0;
+    int x = 0;
     int selecionado;
     int valor;
     int dddVer;
@@ -481,10 +523,18 @@ boolean recarga(int ag, int conta)
     scanf("%d", &preCadastrado);
     if (preCadastrado == 1)
     {
+        fscanf(celulares, "%d %d %d", &operadora, &ddd, &telefone);
+        i++;
+        printf("%d", feof(celulares));
         while (!feof(celulares))
         {
-            i++;
-            fscanf(celulares, "%d %d %d", &operadora, &ddd, &telefone);
+            printf("%d", feof(celulares));
+            x = 1;
+            if (!(i == 1))
+            {
+                fscanf(celulares, "%d %d %d", &operadora, &ddd, &telefone);
+                i++;
+            }
             printf("%d. ", i);
             switch (operadora)
             {
@@ -506,8 +556,16 @@ boolean recarga(int ag, int conta)
             printf(" (%d) %d\n", ddd, telefone);
             insere(&celular, i, ddd, telefone);
         }
-        printf("Qual quer utilizar?\n");
-        scanf("%d", &selecionado);
+        if (x == 0)
+        {
+            printf("Nenhum numero cadastrado!");
+            return 0;
+        }
+        else
+        {
+            printf("Qual quer utilizar?\n");
+            scanf("%d", &selecionado);
+        }
         if (selecionado > i)
         {
             printf("O selecionado nao existe!\n");
@@ -515,6 +573,7 @@ boolean recarga(int ag, int conta)
             return 0;
         }
         celRecarga = busca(celular, selecionado);
+        fclose(celulares);
     }
     else
     {
@@ -559,16 +618,16 @@ boolean recarga(int ag, int conta)
     switch (valor)
     {
     case 1:
-        sacar(ag, conta, 15, verConta(ag, conta));
+        sacar(ag, conta, 15, verConta(ag, conta), 0);
         break;
     case 2:
-        sacar(ag, conta, 20, verConta(ag, conta));
+        sacar(ag, conta, 20, verConta(ag, conta), 0);
         break;
     case 3:
-        sacar(ag, conta, 30, verConta(ag, conta));
+        sacar(ag, conta, 30, verConta(ag, conta), 0);
         break;
     case 4:
-        sacar(ag, conta, 50, verConta(ag, conta));
+        sacar(ag, conta, 50, verConta(ag, conta), 0);
         break;
     default:
         printf("Valor invalido!");
@@ -684,40 +743,114 @@ boolean atualizaEmprestimo(int ag, int conta, int numParcelas, double valorParce
 
 boolean cobraLimite(int ag, int conta)
 {
-
     double verificaLim = pegaLimite(ag, conta);
-    if (verificaLim < 0)
+    TDia dtaUltPag;
+    TDia *dtaAtual = tempo();
+    TDia help;
+    double valor = 0;
+    double vlrLimUsado;
+    int mesAtras;
+    int diaTemp, mesTemp, anoTemp;
+    int dias = 0;
+    int diarias;
+    char caminho[100];
+    sprintf(caminho, "agencias/%d/%d/limite.txt", ag, conta);
+    FILE *limiteArq = fopen(caminho, "rw+");
+    if (limiteArq == NULL)
+    {
+        erroAbert(4);
+        fclose(limiteArq);
+        return 0;
+    }
+
+    fscanf(limiteArq, "%lf %d %d %d", &vlrLimUsado, &dtaUltPag.dia, &dtaUltPag.mes, &dtaUltPag.ano);
+    if (!((dtaUltPag.dia == dtaAtual->dia) && (dtaUltPag.mes == dtaAtual->mes) && (dtaUltPag.ano == dtaAtual->ano)))
+    {
+        help.ano = dtaAtual->ano - dtaUltPag.ano;
+        if (help.ano == 0)
+        {
+            help.mes = dtaAtual->mes - dtaUltPag.mes;
+            if (help.mes > 0)
+            {
+                help.dia = dtaAtual->dia - dtaUltPag.dia;
+                if (help.dia < 0)
+                {
+                    help.dia = dtaAtual->dia + (30 - dtaUltPag.dia);
+                    // help.dia *=-1;
+                    help.mes--;
+                }
+            }
+        }
+        else
+        {
+            help.mes = dtaAtual->mes - dtaUltPag.mes;
+            if (help.mes < 0)
+            {
+                help.mes = dtaAtual->mes + (12 - dtaUltPag.mes);
+                help.ano--;
+            }
+            else
+            {
+                help.dia = dtaAtual->dia - dtaUltPag.dia;
+                if (help.dia < 0)
+                {
+                    help.dia = dtaAtual->dia + (30 - dtaUltPag.dia);
+                    help.mes--;
+                }
+            }
+        }
+        diarias = (((help.ano * 12) + help.mes) * 30) + help.dia;
+        valor = (((vlrLimUsado / 100) * 0.3333) * diarias);
+
+        sacar(ag, conta, valor, verConta(ag, conta), 1);
+    }
+    free(dtaAtual);
+    fclose(limiteArq);
+    return 1;
+}
+
+boolean cobraEmprestimo(int ag, int conta)
+{
+    int verifEmp = verEmprestimo(ag, conta);
+    if (verifEmp == 3)
     {
         printf("Erro na verificacao do emprestimo!\n");
         return 0;
+    }
+    if (verifEmp == 0)
+    {
+        printf("Nao ha emprestimo ativo!\n");
+        return 0;
+    }
+    TDia dtaEmp;
+    TDia dtaUltPag;
+    TDia *dtaAtual = tempo();
+    TDia help;
+    double saldoDev;
+    int numPar;
+    int x = 0;
+    int mesAtras;
+    int diaTemp, mesTemp, anoTemp;
+    double vlrPar;
+    char caminho[100];
+    double valor = 0;
+    int dias = 0;
+    int parcelas;
+    sprintf(caminho, "agencias/%d/%d/emprestimoJuros.txt", ag, conta);
+    FILE *emprestimoJuros = fopen(caminho, "rw+");
+    if (emprestimoJuros == NULL)
+    {
+        erroAbert(4);
+        fclose(emprestimoJuros);
+        return 0;
+    }
 
-        TDia dtaEmp;
-        TDia dtaUltPag;
-        TDia *dtaAtual = tempo();
-        TDia help;
-        double saldoDev;
-        int numPar;
-        int mesAtras;
-        int diaTemp, mesTemp, anoTemp;
-        double vlrPar;
-        char caminho[100];
-        double valor = 0;
-        int dias = 0;
-        int parcelas;
-        sprintf(caminho, "agencias/%d/%d/emprestimoJuros.txt", ag, conta);
-        FILE *emprestimoJuros = fopen(caminho, "rw+");
-        if (emprestimoJuros == NULL)
+    fscanf(emprestimoJuros, "%d %lf %d %d %d %d %d %d", &numPar, &vlrPar, &dtaEmp.dia, &dtaEmp.mes, &dtaEmp.ano, &dtaUltPag.dia, &dtaUltPag.mes, &dtaUltPag.ano);
+    if (dtaUltPag.ano == -1)
+    {
+        if (!((dtaEmp.dia == dtaAtual->dia) && (dtaEmp.mes == dtaAtual->mes) && (dtaEmp.ano == dtaAtual->ano)))
         {
-            erroAbert(4);
-            fclose(emprestimoJuros);
-            return 0;
-        }
-
-        fscanf(emprestimoJuros, "%d %lf %d %d %d %d %d %d", &numPar, &vlrPar, &dtaEmp.dia, &dtaEmp.mes, &dtaEmp.ano, &dtaUltPag.dia, &dtaUltPag.mes, &dtaUltPag.ano);
-        printf("%d", dtaUltPag.ano);
-        if (dtaUltPag.ano == -1)
-        {
-
+            x = 1;
             help.ano = dtaAtual->ano - dtaEmp.ano;
             if (help.ano == 0)
             {
@@ -748,8 +881,12 @@ boolean cobraLimite(int ag, int conta)
                 }
             }
         }
-        else
+    }
+    else
+    {
+        if (!((dtaUltPag.dia == dtaAtual->dia) && (dtaUltPag.mes == dtaAtual->mes) && (dtaUltPag.ano == dtaAtual->ano)))
         {
+            x = 1;
             help.ano = dtaAtual->ano - dtaUltPag.ano;
             if (help.ano == 0)
             {
@@ -780,6 +917,9 @@ boolean cobraLimite(int ag, int conta)
                 }
             }
         }
+    }
+    if (x == 1)
+    {
         parcelas = ((help.ano * 12) + help.mes);
         numPar = numPar - parcelas;
         if (numPar < 0)
@@ -791,129 +931,8 @@ boolean cobraLimite(int ag, int conta)
             valor = parcelas * vlrPar;
         }
         atualizaEmprestimo(ag, conta, numPar, vlrPar, dtaEmp.dia, dtaEmp.mes, dtaEmp.ano);
-        printf("%lf", valor);
-        sacar(ag, conta, valor, verConta(ag, conta));
-        free(dtaAtual);
-        fclose(emprestimoJuros);
-        return 1;
+        sacar(ag, conta, valor, verConta(ag, conta), 1);
     }
-}
-
-boolean cobraEmprestimo(int ag, int conta)
-{
-    int verifEmp = verEmprestimo(ag, conta);
-    if (verifEmp == 3)
-    {
-        printf("Erro na verificacao do emprestimo!\n");
-        return 0;
-    }
-    if (verifEmp == 0)
-    {
-        printf("Nao ha emprestimo ativo!\n");
-        return 0;
-    }
-    TDia dtaEmp;
-    TDia dtaUltPag;
-    TDia *dtaAtual = tempo();
-    TDia help;
-    double saldoDev;
-    int numPar;
-    int mesAtras;
-    int diaTemp, mesTemp, anoTemp;
-    double vlrPar;
-    char caminho[100];
-    double valor = 0;
-    int dias = 0;
-    int parcelas;
-    sprintf(caminho, "agencias/%d/%d/emprestimoJuros.txt", ag, conta);
-    FILE *emprestimoJuros = fopen(caminho, "rw+");
-    if (emprestimoJuros == NULL)
-    {
-        erroAbert(4);
-        fclose(emprestimoJuros);
-        return 0;
-    }
-
-    fscanf(emprestimoJuros, "%d %lf %d %d %d %d %d %d", &numPar, &vlrPar, &dtaEmp.dia, &dtaEmp.mes, &dtaEmp.ano, &dtaUltPag.dia, &dtaUltPag.mes, &dtaUltPag.ano);
-    printf("%d", dtaUltPag.ano);
-    if (dtaUltPag.ano == -1)
-    {
-
-        help.ano = dtaAtual->ano - dtaEmp.ano;
-        if (help.ano == 0)
-        {
-            help.mes = dtaAtual->mes - dtaEmp.mes;
-            if (help.mes > 0)
-            {
-                help.dia = dtaEmp.dia - dtaAtual->dia;
-                if (help.dia < 0)
-                {
-                    help.mes--;
-                }
-            }
-        }
-        else
-        {
-            help.mes = dtaAtual->mes - dtaEmp.mes;
-            if (help.mes < 0)
-            {
-                help.ano--;
-            }
-            else
-            {
-                help.dia = dtaAtual->dia - dtaEmp.dia;
-                if (help.dia < 0)
-                {
-                    help.mes--;
-                }
-            }
-        }
-    }
-    else
-    {
-        help.ano = dtaAtual->ano - dtaUltPag.ano;
-        if (help.ano == 0)
-        {
-            help.mes = dtaAtual->mes - dtaUltPag.mes;
-            if (help.mes > 0)
-            {
-                help.dia = dtaUltPag.dia - dtaAtual->dia;
-                if (help.dia < 0)
-                {
-                    help.mes--;
-                }
-            }
-        }
-        else
-        {
-            help.mes = dtaAtual->mes - dtaUltPag.mes;
-            if (help.mes < 0)
-            {
-                help.ano--;
-            }
-            else
-            {
-                help.dia = dtaAtual->dia - dtaUltPag.dia;
-                if (help.dia < 0)
-                {
-                    help.mes--;
-                }
-            }
-        }
-    }
-    parcelas = ((help.ano * 12) + help.mes);
-    numPar = numPar - parcelas;
-    if (numPar < 0)
-    {
-        valor = numPar * vlrPar;
-    }
-    else
-    {
-        valor = parcelas * vlrPar;
-    }
-    atualizaEmprestimo(ag, conta, numPar, vlrPar, dtaEmp.dia, dtaEmp.mes, dtaEmp.ano);
-    printf("%lf", valor);
-    sacar(ag, conta, valor, verConta(ag, conta));
     free(dtaAtual);
     fclose(emprestimoJuros);
     return 1;
@@ -977,11 +996,12 @@ boolean emprestimo(int ag, int conta)
     }
     else
     {
-        if(valorEmprestimo == 0){
+        if (valorEmprestimo == 0)
+        {
             printf("Valor do emprestimo tem que ser maior que R$0,00\n");
         }
     }
-    
+
     printf("Em quantos meses quer pagar?\n");
     printf("1. 12\n");
     printf("2. 24\n");
@@ -1068,6 +1088,7 @@ void login(int ag, int conta, int senha)
         int contaDep;
         double valor;
         int ope;
+        cobraLimite(ag, conta);
         cobraEmprestimo(ag, conta);
         printf("[Login Efetuado]\n\n");
         printf("Ola %s,\n", nome);
@@ -1116,7 +1137,7 @@ void login(int ag, int conta, int senha)
                 scanf("%d", &ope);
                 if (ope == 1)
                 {
-                    sacar(ag, conta, valor, verConta(ag, conta));
+                    sacar(ag, conta, valor, verConta(ag, conta), 1);
                     depositar(agDep, contaDep, valor, verConta(ag, conta));
                     printf("Transferencia Realizada!\n");
                 }
