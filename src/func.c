@@ -505,13 +505,13 @@ int listaCelulares(int ag, int conta)
     FILE *celulares = fopen(caminho, "r+");
     if (celulares == NULL)
     {
-        erroAbert(4);
+        //erroAbert(4);
         fclose(celulares);
         return 0;
     }
-    while (!feof(celulares))
+    while (fscanf(celulares, "%d %d %s", &operadora, &ddd, &telefone) != EOF)
     {
-        fscanf(celulares, "%d %d %s", &operadora, &ddd, &telefone);
+
         printf("%d. ", x + 1);
         switch (operadora)
         {
@@ -566,11 +566,50 @@ boolean recarga(int ag, int conta)
             printf("Qual quer utilizar?\n");
             scanf("%d", &selecionado);
         }
-        if (selecionado > (qtdCel - 1))
+        if (selecionado > (qtdCel))
         {
             printf("O selecionado nao existe!\n");
             return 0;
         }
+        printf("Qual valor deseja recarregar?\n");
+        printf("1. R$15,00\n");
+        printf("2. R$20,00\n");
+        printf("3. R$30,00\n");
+        printf("4. R$50,00\n");
+        scanf("%d", &valor);
+
+        switch (valor)
+        {
+        case 1:
+            if (!sacar(ag, conta, 15, verConta(ag, conta), 0))
+            {
+                return 0;
+            }
+            break;
+        case 2:
+            if (!sacar(ag, conta, 20, verConta(ag, conta), 0))
+            {
+                return 0;
+            }
+            break;
+        case 3:
+            if (!sacar(ag, conta, 30, verConta(ag, conta), 0))
+            {
+                return 0;
+            }
+            break;
+        case 4:
+            if (!sacar(ag, conta, 50, verConta(ag, conta), 0))
+            {
+                return 0;
+            }
+            break;
+        default:
+            printf("Valor invalido!\n");
+            return 0;
+            break;
+        }
+        return 1;
     }
     else
     {

@@ -21,6 +21,7 @@
 | v1.6     | `Conserto de erros.`                                        |
 | v1.7     | `Adicionado Emprestimo.`                                    |
 | v1.8     | `Adicionado Juros, bug celular.`                            |
+| **v2.0** | `Bugs Corrigidos`                                           |
 
  - [X] Extrato
  - [X] Saque
