@@ -479,7 +479,7 @@ void extrato(int ag, int conta, int tipoConta)
     fclose(operacoes);
 }
 
-boolean salvarNumeroCelular(int ag, int conta, int operadora, int ddd, int telefone)
+boolean salvarNumeroCelular(int ag, int conta, int operadora, int ddd, char *telefone)
 {
     char caminho[100];
     sprintf(caminho, "agencias/%d/%d/celulares.txt", ag, conta);
@@ -490,32 +490,64 @@ boolean salvarNumeroCelular(int ag, int conta, int operadora, int ddd, int telef
         fclose(celulares);
         return 0;
     }
-    fprintf(celulares, "%d %d %d\n", operadora, ddd, telefone);
+    fprintf(celulares, "%d %d %s\n", operadora, ddd, telefone);
     fclose(celulares);
     return 1;
 }
 
-boolean recarga(int ag, int conta)
+int listaCelulares(int ag, int conta)
 {
-    TCel *celular = NULL;
-    TCel *celRecarga;
+    int operadora, ddd;
+    char telefone[15];
     char caminho[100];
-    int operadora, ddd, telefone;
-    int preCadastrado;
-    int i = 0;
     int x = 0;
-    int selecionado;
-    int valor;
-    int dddVer;
-    int telefoneVer;
     sprintf(caminho, "agencias/%d/%d/celulares.txt", ag, conta);
-    FILE *celulares = fopen(caminho, "rw+");
+    FILE *celulares = fopen(caminho, "r+");
     if (celulares == NULL)
     {
         erroAbert(4);
         fclose(celulares);
         return 0;
     }
+    while (!feof(celulares))
+    {
+        fscanf(celulares, "%d %d %s", &operadora, &ddd, &telefone);
+        printf("%d. ", x + 1);
+        switch (operadora)
+        {
+        case 1:
+            printf("TIM -");
+            break;
+        case 2:
+            printf("CLARO -");
+            break;
+        case 3:
+            printf("VIVO -");
+            break;
+        default:
+            printf("Erro, operadora invalida!\n");
+            return 0;
+            fclose(celulares);
+            break;
+        }
+        printf(" (%d) %s\n", ddd, telefone);
+        x++;
+    }
+    fclose(celulares);
+    return x;
+}
+
+boolean recarga(int ag, int conta)
+{
+    int operadora, ddd;
+    char telefone[15];
+    int preCadastrado;
+    int qtdCel;
+    int selecionado;
+    int valor;
+    int dddVer;
+    char telefoneVer[15];
+
     printf(".:Recarga:.\n");
     printf("____________\n");
     printf("Usar numeros pre cadastrados?\n");
@@ -523,42 +555,10 @@ boolean recarga(int ag, int conta)
     scanf("%d", &preCadastrado);
     if (preCadastrado == 1)
     {
-        fscanf(celulares, "%d %d %d", &operadora, &ddd, &telefone);
-        i++;
-        printf("%d", feof(celulares));
-        while (!feof(celulares))
+        qtdCel = listaCelulares(ag, conta);
+        if (qtdCel == 0)
         {
-            printf("%d", feof(celulares));
-            x = 1;
-            if (!(i == 1))
-            {
-                fscanf(celulares, "%d %d %d", &operadora, &ddd, &telefone);
-                i++;
-            }
-            printf("%d. ", i);
-            switch (operadora)
-            {
-            case 1:
-                printf("TIM -");
-                break;
-            case 2:
-                printf("CLARO -");
-                break;
-            case 3:
-                printf("VIVO -");
-                break;
-            default:
-                printf("Erro!");
-                return 0;
-                fclose(celulares);
-                break;
-            }
-            printf(" (%d) %d\n", ddd, telefone);
-            insere(&celular, i, ddd, telefone);
-        }
-        if (x == 0)
-        {
-            printf("Nenhum numero cadastrado!");
+            printf("Nenhum numero cadastrado.\n");
             return 0;
         }
         else
@@ -566,14 +566,11 @@ boolean recarga(int ag, int conta)
             printf("Qual quer utilizar?\n");
             scanf("%d", &selecionado);
         }
-        if (selecionado > i)
+        if (selecionado > (qtdCel - 1))
         {
             printf("O selecionado nao existe!\n");
-            fclose(celulares);
             return 0;
         }
-        celRecarga = busca(celular, selecionado);
-        fclose(celulares);
     }
     else
     {
@@ -585,58 +582,60 @@ boolean recarga(int ag, int conta)
         printf("Qual o DDD?\n");
         scanf("%d", &ddd);
         printf("Qual o Numero?\n");
-        scanf("%d", &telefone);
+        scanf("%s", &telefone);
+        // flush(stdin);
         printf("Repita o DDD?\n");
         scanf("%d", &dddVer);
+        // flush(stdin);
         printf("Repita o Numero?\n");
-        scanf("%d", &telefoneVer);
-        if (!((ddd == dddVer) && (telefone == telefoneVer)))
+        scanf("%s", &telefoneVer);
+        if ((ddd == dddVer) && !(strcmp(telefone, telefoneVer)))
+            salvarNumeroCelular(ag, conta, operadora, ddd, telefone);
+        else
         {
-            printf("Telefone Invalido!");
-            fclose(celulares);
+            printf("Telefone Invalido!\n");
             return 0;
         }
-        fclose(celulares);
-        FILE *celulares = fopen(caminho, "a+");
-        if (celulares == NULL)
+        printf("Qual valor deseja recarregar?\n");
+        printf("1. R$15,00\n");
+        printf("2. R$20,00\n");
+        printf("3. R$30,00\n");
+        printf("4. R$50,00\n");
+        scanf("%d", &valor);
+
+        switch (valor)
         {
-            erroAbert(4);
-            fclose(celulares);
+        case 1:
+            if (!sacar(ag, conta, 15, verConta(ag, conta), 0))
+            {
+                return 0;
+            }
+            break;
+        case 2:
+            if (!sacar(ag, conta, 20, verConta(ag, conta), 0))
+            {
+                return 0;
+            }
+            break;
+        case 3:
+            if (!sacar(ag, conta, 30, verConta(ag, conta), 0))
+            {
+                return 0;
+            }
+            break;
+        case 4:
+            if (!sacar(ag, conta, 50, verConta(ag, conta), 0))
+            {
+                return 0;
+            }
+            break;
+        default:
+            printf("Valor invalido!\n");
             return 0;
+            break;
         }
-        salvarNumeroCelular(ag, conta, operadora, ddd, telefone);
-        fclose(celulares);
+        return 1;
     }
-
-    printf("Qual valor deseja recarregar?\n");
-    printf("1. R$15,00\n");
-    printf("2. R$20,00\n");
-    printf("3. R$30,00\n");
-    printf("4. R$50,00\n");
-    scanf("%d", &valor);
-
-    switch (valor)
-    {
-    case 1:
-        sacar(ag, conta, 15, verConta(ag, conta), 0);
-        break;
-    case 2:
-        sacar(ag, conta, 20, verConta(ag, conta), 0);
-        break;
-    case 3:
-        sacar(ag, conta, 30, verConta(ag, conta), 0);
-        break;
-    case 4:
-        sacar(ag, conta, 50, verConta(ag, conta), 0);
-        break;
-    default:
-        printf("Valor invalido!");
-        fclose(celulares);
-        return 0;
-        break;
-    }
-    fclose(celulares);
-    return 1;
 }
 
 int verEmprestimo(int ag, int conta)
